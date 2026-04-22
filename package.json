@@ -1,0 +1,18 @@
+{
+  "name": "busca_guia_mei",
+  "version": "1.0.0",
+  "description": "Aplicação web para baixar DAS do MEI mes a mes",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^5.0.2",
+    "express": "^5.2.1",
+    "zod": "^4.3.6"
+  }
+}

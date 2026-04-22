@@ -1,0 +1,169 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  color: #1f2937;
+}
+
+.container {
+  max-width: 720px;
+  margin: 40px auto;
+  padding: 24px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+h1 {
+  margin-top: 0;
+}
+
+.menu-topo {
+  display: flex;
+  gap: 10px;
+  margin: 14px 0 10px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+label {
+  font-weight: 600;
+}
+
+input,
+button,
+select {
+  font-size: 15px;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+input,
+select {
+  border: 1px solid #d1d5db;
+}
+
+button {
+  border: 0;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.alerta {
+  padding: 10px 12px;
+  margin: 10px 0 16px 0;
+  border-radius: 8px;
+}
+
+.alerta.erro {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.alerta.ok {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.logs {
+  margin-top: 24px;
+}
+
+.logs ul {
+  padding-left: 20px;
+}
+
+.processo {
+  margin-top: 22px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 18px;
+}
+
+.lista-meses {
+  list-style: none;
+  padding-left: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.item-mes {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.item-mes.baixado {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.item-topo {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.status {
+  text-transform: capitalize;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.form-baixa {
+  display: flex;
+  gap: 8px;
+}
+
+.form-baixa input {
+  flex: 1;
+}
+
+.botao-secundario {
+  background: #4b5563;
+}
+
+.botao-link {
+  display: inline-block;
+  text-decoration: none;
+  background: #374151;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.meses-fieldset {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.meses-fieldset legend {
+  font-weight: 600;
+  padding: 0 6px;
+}
+
+.meses-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 12px;
+}
+
+.mes-opcao {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.mes-opcao input {
+  margin: 0;
+}

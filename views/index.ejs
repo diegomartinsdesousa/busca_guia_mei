@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gerador DAS MEI</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Gerador DAS MEI (mes a mes)</h1>
+      <p>
+        Integracao via API da InfoSimples para consulta do DAS mes a mes.
+      </p>
+
+      <nav class="menu-topo">
+        <a href="/" class="botao-link">Tela principal</a>
+        <a href="/configuracoes" class="botao-link">Configuracoes</a>
+      </nav>
+
+      <% if (erro) { %>
+      <div class="alerta erro"><%= erro %></div>
+      <% } %>
+
+      <% if (mensagem) { %>
+      <div class="alerta ok"><%= mensagem %></div>
+      <% } %>
+
+      <% if (tela === "configuracoes") { %>
+      <section class="processo">
+        <h2>Configuracoes</h2>
+        <form action="/configuracoes" method="post">
+          <label for="tokenInfosimples">Token InfoSimples</label>
+          <input
+            id="tokenInfosimples"
+            name="tokenInfosimples"
+            type="password"
+            placeholder="seu_token_aqui"
+            value="<%= valores.tokenInfosimples %>"
+            required
+          />
+
+          <label for="diretorioDownload">Pasta de download</label>
+          <input
+            id="diretorioDownload"
+            name="diretorioDownload"
+            type="password"
+            placeholder="C:\caminho\downloads"
+            value="<%= valores.diretorioDownload %>"
+            required
+          />
+
+          <button type="submit" class="botao-secundario">Salvar configuracoes</button>
+          <a href="/" class="botao-link">Voltar para tela principal</a>
+        </form>
+      </section>
+      <% } else { %>
+      <form action="/gerar" method="post">
+        <label for="cnpj">CNPJ</label>
+        <input
+          id="cnpj"
+          name="cnpj"
+          placeholder="00.000.000/0000-00"
+          value="<%= valores.cnpj %>"
+          required
+        />
+
+        <label for="ano">Ano</label>
+        <select id="ano" name="ano" required>
+          <% for (let ano = new Date().getFullYear() - 5; ano <= new Date().getFullYear() + 1; ano++) { %>
+          <option value="<%= ano %>" <%= String(ano) === String(valores.ano) ? "selected" : "" %>>
+            <%= ano %>
+          </option>
+          <% } %>
+        </select>
+
+        <fieldset class="meses-fieldset">
+          <legend>Meses</legend>
+          <label class="mes-opcao selecionar-todos">
+            <input type="checkbox" id="selecionarTodosMeses" />
+            <span>Selecionar todos</span>
+          </label>
+          <div class="meses-grid">
+            <% const meses = [
+              { valor: "01", nome: "Janeiro" },
+              { valor: "02", nome: "Fevereiro" },
+              { valor: "03", nome: "Marco" },
+              { valor: "04", nome: "Abril" },
+              { valor: "05", nome: "Maio" },
+              { valor: "06", nome: "Junho" },
+              { valor: "07", nome: "Julho" },
+              { valor: "08", nome: "Agosto" },
+              { valor: "09", nome: "Setembro" },
+              { valor: "10", nome: "Outubro" },
+              { valor: "11", nome: "Novembro" },
+              { valor: "12", nome: "Dezembro" }
+            ]; %>
+            <% meses.forEach((mes) => { %>
+            <label class="mes-opcao">
+              <input
+                type="checkbox"
+                name="mesesSelecionados"
+                value="<%= mes.valor %>"
+                <%= valores.mesesSelecionados?.includes(mes.valor) ? "checked" : "" %>
+              />
+              <span><%= mes.nome %></span>
+            </label>
+            <% }); %>
+          </div>
+        </fieldset>
+
+        <label for="dataPagamento">Data de pagamento (opcional)</label>
+        <input
+          id="dataPagamento"
+          name="dataPagamento"
+          placeholder="AAAA-MM-DD"
+          value="<%= valores.dataPagamento %>"
+        />
+
+        <button type="submit">Consultar via InfoSimples</button>
+      </form>
+
+      <% if (logs?.length) { %>
+      <section class="processo">
+        <h2>Logs da execucao</h2>
+        <ul class="lista-meses">
+          <% logs.forEach((log) => { %>
+          <li class="item-mes"><%= log %></li>
+          <% }) %>
+        </ul>
+      </section>
+      <% } %>
+
+      <% if (resultados?.length) { %>
+      <section class="processo">
+        <h2>Resultados por periodo</h2>
+        <ul class="lista-meses">
+          <% resultados.forEach((item) => { %>
+          <li class="item-mes <%= item.sucesso ? 'baixado' : '' %>">
+            <div class="item-topo">
+              <strong><%= item.periodo %></strong>
+              <span class="status">code <%= item.code %></span>
+            </div>
+            <% if (item.sucesso) { %>
+            <small>PDF salvo com sucesso.</small>
+            <% } else { %>
+            <small><%= item.codeMessage || "Falha na consulta." %></small>
+            <% if (item.errors?.length) { %>
+            <small>Detalhe: <%= item.errors.join("; ") %></small>
+            <% } %>
+            <% } %>
+          </li>
+          <% }) %>
+        </ul>
+      </section>
+      <% } %>
+      <% } %>
+    </main>
+    <script>
+      (function () {
+        const toggleTodos = document.getElementById("selecionarTodosMeses");
+        const checkboxesMeses = Array.from(
+          document.querySelectorAll('input[name="mesesSelecionados"]')
+        );
+
+        if (!toggleTodos || checkboxesMeses.length === 0) return;
+
+        const sincronizarToggleTodos = function () {
+          toggleTodos.checked = checkboxesMeses.every((checkbox) => checkbox.checked);
+        };
+
+        toggleTodos.addEventListener("change", function () {
+          checkboxesMeses.forEach((checkbox) => {
+            checkbox.checked = toggleTodos.checked;
+          });
+        });
+
+        checkboxesMeses.forEach((checkbox) => {
+          checkbox.addEventListener("change", sincronizarToggleTodos);
+        });
+
+        sincronizarToggleTodos();
+      })();
+    </script>
+  </body>
+</html>
