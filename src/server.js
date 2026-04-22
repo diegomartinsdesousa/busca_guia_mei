@@ -12,6 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const ANO_ATUAL = new Date().getFullYear();
 const BASE_RECEITA = "https://www8.receita.fazenda.gov.br";
+const downloadsMemoria = new Map();
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "..", "views"));
@@ -174,6 +175,12 @@ function renderPagina(res, { tela = "principal", mensagem = "", erro = "", logs 
   });
 }
 
+function registrarDownloadEmMemoria(caminhoArquivo) {
+  const id = `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  downloadsMemoria.set(id, caminhoArquivo);
+  return id;
+}
+
 app.get("/", async (_, res) => {
   const configuracoes = await carregarConfiguracoes();
   return renderPagina(res, {
@@ -192,6 +199,20 @@ app.get("/configuracoes", async (_, res) => {
 
 app.get("/healthz", (_, res) => {
   res.status(200).json({ ok: true });
+});
+
+app.get("/download/:id", async (req, res) => {
+  const caminhoArquivo = downloadsMemoria.get(req.params.id);
+  if (!caminhoArquivo) {
+    return res.status(404).send("Arquivo nao encontrado.");
+  }
+
+  try {
+    await fs.access(caminhoArquivo);
+    return res.download(caminhoArquivo, path.basename(caminhoArquivo));
+  } catch {
+    return res.status(404).send("Arquivo nao encontrado.");
+  }
 });
 
 app.post("/gerar", async (req, res) => {
@@ -275,6 +296,10 @@ app.post("/gerar", async (req, res) => {
         data: resposta.data || null,
         siteReceipts: siteReceipts.length ? siteReceipts : null,
         arquivosBaixados: arquivos,
+        linksDownload: arquivos.map((arquivo) => ({
+          nome: path.basename(arquivo),
+          url: `/download/${registrarDownloadEmMemoria(arquivo)}`,
+        })),
         errors: erros,
       });
 

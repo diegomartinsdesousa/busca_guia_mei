@@ -4,7 +4,47 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gerador DAS MEI</title>
-    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/style.css?v=20260422" />
+    <style>
+      /* Fallback caso o CSS externo falhe em produção */
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f4f6f8;
+        color: #1f2937;
+      }
+      .container {
+        max-width: 720px;
+        margin: 40px auto;
+        padding: 24px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      input, button, select {
+        font-size: 15px;
+        padding: 10px 12px;
+        border-radius: 8px;
+      }
+      input, select {
+        border: 1px solid #d1d5db;
+      }
+      button, .botao-link {
+        border: 0;
+        background: #2563eb;
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 8px;
+        text-decoration: none;
+        display: inline-block;
+      }
+    </style>
   </head>
   <body>
     <main class="container">
@@ -143,6 +183,11 @@
             </div>
             <% if (item.sucesso) { %>
             <small>PDF salvo com sucesso.</small>
+            <% if (item.linksDownload?.length) { %>
+            <% item.linksDownload.forEach((arquivo) => { %>
+            <small><a href="<%= arquivo.url %>">Baixar PDF: <%= arquivo.nome %></a></small>
+            <% }) %>
+            <% } %>
             <% } else { %>
             <small><%= item.codeMessage || "Falha na consulta." %></small>
             <% if (item.errors?.length) { %>
