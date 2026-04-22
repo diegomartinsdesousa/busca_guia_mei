@@ -2,7 +2,10 @@ const path = require("path");
 const fs = require("fs/promises");
 const express = require("express");
 const { z } = require("zod");
-const { consultarDasInfosimples } = require("./services/infosimplesClient");
+const {
+  consultarDasInfosimplesComRetentativas,
+  sleep,
+} = require("./services/infosimplesClient");
 const {
   carregarConfiguracoes,
   salvarConfiguracoes,
@@ -13,6 +16,11 @@ const PORT = process.env.PORT || 3000;
 const ANO_ATUAL = new Date().getFullYear();
 const BASE_RECEITA = "https://www8.receita.fazenda.gov.br";
 const downloadsMemoria = new Map();
+
+const DELAY_ENTRE_PERIODOS_MS = Number(process.env.DELAY_ENTRE_PERIODOS_MS || 10000);
+const INFOSIMPLES_TIMEOUT = Number(process.env.INFOSIMPLES_TIMEOUT || 300);
+const INFOSIMPLES_MAX_RETRIES_609 = Number(process.env.INFOSIMPLES_MAX_RETRIES_609 || 2);
+const INFOSIMPLES_RETRY_DELAY_609_MS = Number(process.env.INFOSIMPLES_RETRY_DELAY_609_MS || 25000);
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "..", "views"));
@@ -249,13 +257,23 @@ app.post("/gerar", async (req, res) => {
     const pastaAno = path.join(configuracoes.diretorioDownload, parsed.data.ano);
     await fs.mkdir(pastaAno, { recursive: true });
 
-    for (const periodo of meses) {
+    for (let i = 0; i < meses.length; i += 1) {
+      const periodo = meses[i];
+      if (i > 0 && DELAY_ENTRE_PERIODOS_MS > 0) {
+        logs.push(
+          `[${new Date().toLocaleTimeString("pt-BR")}] Aguardando ${DELAY_ENTRE_PERIODOS_MS / 1000}s antes do proximo periodo (evita limite 609)...`
+        );
+        await sleep(DELAY_ENTRE_PERIODOS_MS);
+      }
       logs.push(`[${new Date().toLocaleTimeString("pt-BR")}] Consultando ${periodo}...`);
-      const resposta = await consultarDasInfosimples({
+      const resposta = await consultarDasInfosimplesComRetentativas({
         cnpj: parsed.data.cnpj,
         periodo,
         dataPagamento: parsed.data.dataPagamento,
         token: configuracoes.tokenInfosimples,
+        timeout: INFOSIMPLES_TIMEOUT,
+        maxRetries609: INFOSIMPLES_MAX_RETRIES_609,
+        delayEntreRetentativas609: INFOSIMPLES_RETRY_DELAY_609_MS,
       });
 
       const code = Number(resposta.code);

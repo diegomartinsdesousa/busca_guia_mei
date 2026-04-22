@@ -13,3 +13,9 @@ services:
         sync: false
       - key: DOWNLOAD_DIR
         value: /tmp/downloads
+      - key: DELAY_ENTRE_PERIODOS_MS
+        value: "12000"
+      - key: INFOSIMPLES_MAX_RETRIES_609
+        value: "2"
+      - key: INFOSIMPLES_RETRY_DELAY_609_MS
+        value: "30000"

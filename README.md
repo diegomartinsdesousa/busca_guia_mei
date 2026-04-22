@@ -15,6 +15,16 @@ Aplicacao web com integracao na API da InfoSimples para consultar e salvar DAS d
 
 E necessario token valido da InfoSimples e permissao para o servico consultado.
 
+### Codigo 609 (limite no site de origem)
+
+Se aparecer `609 - Tentativas de consultar o site ou aplicativo de origem excedidas`, o provedor ou a Receita limitou chamadas muito frequentes.
+
+O sistema ja:
+- espera entre cada periodo (`DELAY_ENTRE_PERIODOS_MS`, padrao 10s)
+- retenta ate `INFOSIMPLES_MAX_RETRIES_609` vezes com pausa (`INFOSIMPLES_RETRY_DELAY_609_MS`)
+
+Em lotes grandes (muitos meses), aumente esses valores no Render ou no `.env`.
+
 ## Como executar localmente
 
 1. Instale dependencias:
