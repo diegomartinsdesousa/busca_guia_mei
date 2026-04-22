@@ -1,3 +1,5 @@
+const { fetchComTimeout } = require("./fetchComTimeout");
+
 const ENDPOINT =
   "https://api.infosimples.com/api/v2/consultas/receita-federal/simples-das";
 
@@ -5,7 +7,13 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function consultarDasInfosimples({ cnpj, periodo, dataPagamento, token, timeout = 300 }) {
+/** Limite de espera no HTTP cliente: timeout da API (s) + margem de rede */
+function timeoutFetchInfosimplesSegundos(timeoutApiSegundos) {
+  const s = Number(timeoutApiSegundos) || 120;
+  return Math.min(Math.max(s, 30), 180) * 1000 + 20000;
+}
+
+async function consultarDasInfosimples({ cnpj, periodo, dataPagamento, token, timeout = 120 }) {
   const body = {
     cnpj,
     periodo,
@@ -16,13 +24,23 @@ async function consultarDasInfosimples({ cnpj, periodo, dataPagamento, token, ti
     body.data_pagamento = dataPagamento;
   }
 
-  const response = await fetch(ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
+  let response;
+  try {
+    response = await fetchComTimeout(
+      ENDPOINT,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      },
+      timeoutFetchInfosimplesSegundos(timeout)
+    );
+  } catch (err) {
+    const nome = err?.name === "AbortError" ? "Timeout" : err?.message;
+    throw new Error(`Falha ao contatar InfoSimples (${periodo}): ${nome}`);
+  }
 
   const raw = await response.text();
   let payload;
@@ -44,7 +62,7 @@ async function consultarDasInfosimplesComRetentativas({
   periodo,
   dataPagamento,
   token,
-  timeout = 300,
+  timeout = 120,
   maxRetries609 = 2,
   delayEntreRetentativas609 = 25000,
 }) {
@@ -76,4 +94,5 @@ module.exports = {
   consultarDasInfosimples,
   consultarDasInfosimplesComRetentativas,
   sleep,
+  timeoutFetchInfosimplesSegundos,
 };

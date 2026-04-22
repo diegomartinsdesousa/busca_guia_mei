@@ -6,6 +6,7 @@ const {
   consultarDasInfosimplesComRetentativas,
   sleep,
 } = require("./services/infosimplesClient");
+const { fetchComTimeout } = require("./services/fetchComTimeout");
 const {
   carregarConfiguracoes,
   salvarConfiguracoes,
@@ -18,7 +19,10 @@ const BASE_RECEITA = "https://www8.receita.fazenda.gov.br";
 const downloadsMemoria = new Map();
 
 const DELAY_ENTRE_PERIODOS_MS = Number(process.env.DELAY_ENTRE_PERIODOS_MS || 10000);
-const INFOSIMPLES_TIMEOUT = Number(process.env.INFOSIMPLES_TIMEOUT || 300);
+/** Segundos (parametro da API). Padrao 120 evita esperas de varios minutos por chamada. */
+const INFOSIMPLES_TIMEOUT = Number(process.env.INFOSIMPLES_TIMEOUT || 120);
+/** Timeout ao baixar HTML/PDF da Receita (ms) */
+const DOWNLOAD_FETCH_TIMEOUT_MS = Number(process.env.DOWNLOAD_FETCH_TIMEOUT_MS || 120000);
 const INFOSIMPLES_MAX_RETRIES_609 = Number(process.env.INFOSIMPLES_MAX_RETRIES_609 || 2);
 const INFOSIMPLES_RETRY_DELAY_609_MS = Number(process.env.INFOSIMPLES_RETRY_DELAY_609_MS || 25000);
 
@@ -146,7 +150,18 @@ async function baixarReceiptPreferindoPdf({ url, cnpj, periodo, indice, pastaAno
   const baseNome = `DAS_${cnpj}_${periodo}_${indice}`;
   const destinoPdf = path.join(pastaAno, `${baseNome}.pdf`);
 
-  const resposta = await fetch(url);
+  let resposta;
+  try {
+    resposta = await fetchComTimeout(
+      url,
+      { method: "GET" },
+      DOWNLOAD_FETCH_TIMEOUT_MS
+    );
+  } catch (e) {
+    throw new Error(
+      `Timeout ou falha ao baixar comprovante (${DOWNLOAD_FETCH_TIMEOUT_MS / 1000}s). Tente de novo.`
+    );
+  }
   if (!resposta.ok) {
     throw new Error(`Falha ao baixar ${url}: HTTP ${resposta.status}`);
   }
@@ -161,7 +176,11 @@ async function baixarReceiptPreferindoPdf({ url, cnpj, periodo, indice, pastaAno
   if (!pdfUrl) return null;
 
   try {
-    const respostaPdf = await fetch(pdfUrl);
+    const respostaPdf = await fetchComTimeout(
+      pdfUrl,
+      { method: "GET" },
+      DOWNLOAD_FETCH_TIMEOUT_MS
+    );
     if (!respostaPdf.ok) return null;
     const bufferPdf = Buffer.from(await respostaPdf.arrayBuffer());
     if (!parecePdf(bufferPdf)) return null;
@@ -376,6 +395,9 @@ app.post("/configuracoes", async (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Servidor ativo em http://localhost:${PORT}`);
 });
+/** Permite lotes com varios meses sem cortar a conexao HTTP cedo demais */
+server.timeout = Number(process.env.SERVER_REQUEST_TIMEOUT_MS || 900000);
+server.keepAliveTimeout = 65000;

@@ -25,6 +25,13 @@ O sistema ja:
 
 Em lotes grandes (muitos meses), aumente esses valores no Render ou no `.env`.
 
+### Demora ou pagina em branco
+
+- Cada chamada a InfoSimples usa `INFOSIMPLES_TIMEOUT` (segundos). Valores muito altos (ex.: 300) fazem uma unica consulta esperar ate **5 minutos**.
+- O padrao agora e **120s** por chamada, com **timeout de rede** no cliente.
+- Downloads da Receita usam `DOWNLOAD_FETCH_TIMEOUT_MS` (padrao 2 minutos).
+- No Render (plano gratuito), requisicoes HTTP longas podem ser cortadas pelo proxy; para muitos meses, processe em lotes menores ou use plano pago.
+
 ## Como executar localmente
 
 1. Instale dependencias:

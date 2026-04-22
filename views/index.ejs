@@ -44,6 +44,35 @@
         text-decoration: none;
         display: inline-block;
       }
+      .overlay-processando {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      .overlay-processando[hidden] {
+        display: none !important;
+      }
+      .overlay-conteudo {
+        background: #fff;
+        padding: 24px 28px;
+        border-radius: 12px;
+        max-width: 360px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+      }
+      .overlay-dica {
+        font-size: 14px;
+        color: #4b5563;
+        margin: 8px 0 0;
+      }
+      .dica-ano {
+        font-size: 14px;
+        color: #6b7280;
+        margin: 0 0 12px;
+      }
     </style>
   </head>
   <body>
@@ -51,6 +80,9 @@
       <h1>Gerador DAS MEI (mes a mes)</h1>
       <p>
         Integracao via API da InfoSimples para consulta do DAS mes a mes.
+      </p>
+      <p class="dica-ano">
+        Use ano e meses ja disponiveis na Receita. Periodos muito futuros podem demorar ou falhar.
       </p>
 
       <nav class="menu-topo">
@@ -95,7 +127,13 @@
         </form>
       </section>
       <% } else { %>
-      <form action="/gerar" method="post">
+      <div id="overlayProcessando" class="overlay-processando" hidden aria-live="polite">
+        <div class="overlay-conteudo">
+          <p><strong>Processando...</strong></p>
+          <p class="overlay-dica">A consulta pode levar 1 a 3 minutos por mes (API + Receita). Nao feche esta aba.</p>
+        </div>
+      </div>
+      <form id="formConsulta" action="/gerar" method="post">
         <label for="cnpj">CNPJ</label>
         <input
           id="cnpj"
@@ -157,7 +195,7 @@
           value="<%= valores.dataPagamento %>"
         />
 
-        <button type="submit">Consultar via InfoSimples</button>
+        <button type="submit" id="btnConsultar">Consultar via InfoSimples</button>
       </form>
 
       <% if (logs?.length) { %>
@@ -225,6 +263,20 @@
         });
 
         sincronizarToggleTodos();
+      })();
+
+      (function () {
+        const form = document.getElementById("formConsulta");
+        const overlay = document.getElementById("overlayProcessando");
+        const btn = document.getElementById("btnConsultar");
+        if (!form || !overlay) return;
+        form.addEventListener("submit", function () {
+          overlay.hidden = false;
+          if (btn) {
+            btn.disabled = true;
+            btn.textContent = "Aguarde...";
+          }
+        });
       })();
     </script>
   </body>

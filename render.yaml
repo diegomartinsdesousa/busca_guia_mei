@@ -19,3 +19,9 @@ services:
         value: "2"
       - key: INFOSIMPLES_RETRY_DELAY_609_MS
         value: "30000"
+      - key: INFOSIMPLES_TIMEOUT
+        value: "120"
+      - key: DOWNLOAD_FETCH_TIMEOUT_MS
+        value: "120000"
+      - key: SERVER_REQUEST_TIMEOUT_MS
+        value: "900000"
